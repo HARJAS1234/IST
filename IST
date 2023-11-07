@@ -1,0 +1,89 @@
+import pygame
+import random
+
+# Initialize Pygame
+pygame.init()
+
+# Set up the game window
+window_width = 800
+window_height = 600
+window = pygame.display.set_mode((window_width, window_height))
+pygame.display.set_caption("Rocket Game")
+
+# Load images
+rocket_img = pygame.image.load("rocket.png")
+asteroid_img = pygame.image.load("asteroid.png")
+background_img = pygame.image.load("background.png")
+
+# Set up game variables
+rocket_x = window_width // 2
+rocket_y = window_height - 100
+rocket_speed = 5
+asteroids = []
+score = 0
+clock = pygame.time.Clock()
+
+# Game loop
+running = True
+while running:
+    # Handle events
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            running = False
+
+    # Handle player input
+    keys = pygame.key.get_pressed()
+    if keys[pygame.K_LEFT] and rocket_x > 0:
+        rocket_x -= rocket_speed
+    if keys[pygame.K_RIGHT] and rocket_x < window_width - rocket_img.get_width():
+        rocket_x += rocket_speed
+
+    # Clear the screen
+    window.blit(background_img, (0, 0))
+
+    # Spawn asteroids
+    if random.randint(0, 100) < 3:
+        asteroid_x = random.randint(0, window_width - asteroid_img.get_width())
+        asteroid_y = -asteroid_img.get_height()
+        asteroids.append((asteroid_x, asteroid_y))
+
+    # Update and draw asteroids
+    for asteroid in asteroids:
+        asteroid_x, asteroid_y = asteroid
+        asteroid_y += 3  # Adjust asteroid speed
+        window.blit(asteroid_img, (asteroid_x, asteroid_y))
+        asteroid_rect = pygame.Rect(asteroid_x, asteroid_y, asteroid_img.get_width(), asteroid_img.get_height())
+
+        # Check collision with rocket
+        rocket_rect = pygame.Rect(rocket_x, rocket_y, rocket_img.get_width(), rocket_img.get_height())
+        if rocket_rect.colliderect(asteroid_rect):
+            running = False  # Game over if collision occurs
+
+        # Remove asteroids that go off-screen
+        if asteroid_y > window_height:
+            asteroids.remove(asteroid)
+            score += 1
+
+    # Update and draw rocket
+    window.blit(rocket_img, (rocket_x, rocket_y))
+
+    # Display score
+    score_text = pygame.font.SysFont(None, 30).render("Score: " + str(score), True, (255, 255, 255))
+    window.blit(score_text, (10, 10))
+
+    # Update the game display
+    pygame.display.update()
+
+    # Set the FPS (frames per second)
+    clock.tick(60)
+
+# Game over
+game_over_text = pygame.font.SysFont(None, 50).render("Game Over", True, (255, 255, 255))
+window.blit(game_over_text, (window_width // 2 - game_over_text.get_width() // 2, window_height // 2))
+pygame.display.update()
+
+# Wait for a few seconds before quitting
+pygame.time.wait(3000)
+
+# Quit Pygame
+pygame.quit()
